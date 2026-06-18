@@ -1,7 +1,7 @@
 import shutil
 import tempfile
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
@@ -11,7 +11,7 @@ from scorer import ATSScorer
 
 
 class Scores(BaseModel):
-    overall: float
+    ats_score: float
     keyword_match: float
     technical_skills: float
     soft_skills: float
@@ -52,22 +52,26 @@ def _save_upload_file(upload_file: UploadFile) -> str:
         return tmp.name
 
 
-def _analyze_file_path(file_path: str, job_description: str) -> dict:
+def _analyze_file_path(file_path: str, job_description: Optional[str], ats_only: bool = True) -> dict:
     try:
         resume_text = parser.parse_file(file_path)
         contact_info = parser.extract_contact_info(resume_text)
-        report = scorer.generate_report(resume_text, job_description, contact_info)
+        report = scorer.generate_report(resume_text or "", job_description or "", contact_info, ats_only=ats_only)
         return report
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@app.post("/analyze", response_model=ATSReport)
-async def analyze_resume(file: UploadFile = File(...), job_description: str = Form(...)):
-    """Analyze a single resume file against a job description."""
+@app.post("/analyze")
+async def analyze_resume(file: UploadFile = File(...), job_description: Optional[str] = Form(None), ats_only: bool = Form(True)):
+    """Analyze a single resume file against an optional job description.
+
+    By default the endpoint returns only the ATS score (minimal report). Set
+    `ats_only=false` in the form to request the full report.
+    """
     temp_path = _save_upload_file(file)
     try:
-        report = _analyze_file_path(temp_path, job_description)
+        report = _analyze_file_path(temp_path, job_description, ats_only=ats_only)
         return report
     finally:
         try:
@@ -76,15 +80,19 @@ async def analyze_resume(file: UploadFile = File(...), job_description: str = Fo
             pass
 
 
-@app.post("/analyze/batch", response_model=List[FileAnalysisResult])
-async def analyze_batch(files: List[UploadFile] = File(...), job_description: str = Form(...)):
-    """Analyze multiple resume files in a single request."""
+@app.post("/analyze/batch")
+async def analyze_batch(files: List[UploadFile] = File(...), job_description: Optional[str] = Form(None), ats_only: bool = Form(True)):
+    """Analyze multiple resume files in a single request.
+
+    By default returns minimal ATS-only reports per file. Set `ats_only=false`
+    in the form to receive full reports.
+    """
     results = []
 
     for file in files:
         temp_path = _save_upload_file(file)
         try:
-            report = _analyze_file_path(temp_path, job_description)
+            report = _analyze_file_path(temp_path, job_description, ats_only=ats_only)
             results.append({
                 'filename': file.filename,
                 'report': report

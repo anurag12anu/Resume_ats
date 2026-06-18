@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+
 # Resume ATS Analyzer
 
 A Python tool for analyzing resumes against job descriptions and calculating an ATS (Applicant Tracking System) compatibility score.
@@ -37,23 +38,43 @@ python app.py
 
 Then:
 
-1. Paste the job description.
+1. Paste the job description (optional).
 2. Enter a resume file path or a directory containing resumes.
 3. View the generated ATS analysis report.
 
 ### Command Line Mode
 
-Run the analyzer with a resume path and job description file:
+Run the analyzer with a resume path:
+
+```bash
+python app.py <resume_path>
+```
+
+Optionally provide a job description file:
 
 ```bash
 python app.py <resume_path> <job_description_file>
 ```
 
+To print only the ATS score:
+
+```bash
+python app.py <resume_path> --ats-only
+python app.py <resume_path> <job_description_file> --ats-only
+```
+
 Examples:
 
 ```bash
-python app.py resumes/john_doe.pdf job_description.txt
+python app.py resumes/john_doe.pdf
 python app.py resumes/ job_description.txt
+python app.py resumes/john_doe.pdf --ats-only
+```
+
+For batch directories, the output prints one score per file:
+
+```bash
+python app.py resumes/ --ats-only
 ```
 
 ### FastAPI Mode
@@ -68,16 +89,21 @@ Then open the interactive docs at:
 
 - `http://127.0.0.1:8000/docs`
 
+The API now accepts an optional `job_description` field.
+By default the API returns only the ATS score (minimal response). To request the full report,
+include the form field `ats_only=false` when posting to `/analyze` or `/analyze/batch`.
+If no job description is supplied, the resume is still analyzed with generic scoring.
+
 ## What the Report Includes
 
-- **Overall Score**: ATS compatibility rating from 0 to 100
+- **ATS Score**: ATS compatibility rating from 0 to 100
 - **Component Scores**:
   - Keyword Match
   - Technical Skills
   - Soft Skills
   - Experience Relevance
   - Format Quality
-- **Missing Keywords**: Notable job description keywords absent from the resume
+- **Missing Keywords**: Notable job description keywords absent from the resume (when a job description is provided)
 - **Recommendations**: Suggested improvements
 - **Contact Information**: Extracted email, phone, and LinkedIn
 
@@ -126,7 +152,8 @@ Free to use for personal and commercial purposes.
 
 ## Contributing
 
-Contributions are welcome. Feel free to fork, improve the scoring logic, add support for new resume formats, or enhance the API.
-=======
+# Contributions are welcome. Feel free to fork, improve the scoring logic, add support for new resume formats, or enhance the API.
+
 # Resume_ats
->>>>>>> 7f63ca9b1cd3f1ed0a27760f3bdf2329db2b04ce
+
+> > > > > > > 7f63ca9b1cd3f1ed0a27760f3bdf2329db2b04ce

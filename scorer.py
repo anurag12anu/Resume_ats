@@ -45,7 +45,7 @@ class ATSScorer:
         # Format and structure score
         scores['format_quality'] = self._calculate_format_quality(resume_text)
         
-        # Calculate weighted overall score
+        # Calculate weighted ATS score
         overall_score = (
             scores['keyword_match'] * 0.35 +
             scores['technical_skills'] * 0.25 +
@@ -54,7 +54,7 @@ class ATSScorer:
             scores['format_quality'] * 0.10
         )
         
-        scores['overall'] = round(overall_score, 2)
+        scores['ats_score'] = round(overall_score, 2)
         
         return scores
     
@@ -185,9 +185,18 @@ class ATSScorer:
         
         return missing[:10]  # Return top 10 missing keywords
     
-    def generate_report(self, resume_text, job_description, contact_info=None):
-        """Generate a comprehensive ATS analysis report."""
+    def generate_report(self, resume_text, job_description, contact_info=None, ats_only=False):
+        """Generate a comprehensive ATS analysis report.
+
+        If `ats_only` is True, return a minimal report with only the ATS score
+        nested under `scores` for compatibility: `{'scores': {'ats_score': X}}`.
+        """
         scores = self.score_resume(resume_text, job_description)
+
+        if ats_only:
+            # Minimal report containing only the ATS score
+            return {'scores': {'ats_score': scores['ats_score']}}
+
         missing_keywords = self.get_missing_keywords(resume_text, job_description)
         
         report = {
