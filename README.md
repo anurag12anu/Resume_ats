@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Resume ATS Analyzer
 
 A Python tool for analyzing resumes against job descriptions and calculating an ATS (Applicant Tracking System) compatibility score.
@@ -126,3 +127,6 @@ Free to use for personal and commercial purposes.
 ## Contributing
 
 Contributions are welcome. Feel free to fork, improve the scoring logic, add support for new resume formats, or enhance the API.
+=======
+# Resume_ats
+>>>>>>> 7f63ca9b1cd3f1ed0a27760f3bdf2329db2b04ce
