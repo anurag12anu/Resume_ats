@@ -1,36 +1,34 @@
 # Resume ATS Analyzer
 
-A Python-based tool to analyze resumes against job descriptions and calculate an ATS (Applicant Tracking System) compatibility score.
+A Python tool for analyzing resumes against job descriptions and calculating an ATS (Applicant Tracking System) compatibility score.
 
 ## Features
 
-- **Resume Parsing**: Support for PDF, DOCX, and TXT formats
-- **ATS Scoring**: Calculate overall compatibility score (0-100)
-- **Detailed Analysis**:
-  - Keyword matching
-  - Technical skills assessment
-  - Soft skills detection
-  - Experience relevance evaluation
-  - Format quality check
-- **Contact Information Extraction**: Automatically extract email, phone, and LinkedIn
-- **Recommendations**: Get actionable suggestions to improve resume
-- **Batch Processing**: Analyze multiple resumes at once
-- **Interactive Mode**: Easy-to-use command-line interface
+- Resume parsing for PDF, DOCX, and TXT files
+- ATS compatibility scoring with component breakdown
+- Keyword matching and missing keyword detection
+- Technical and soft skills matching
+- Experience relevance scoring and format quality checks
+- Contact information extraction (email, phone, LinkedIn)
+- Batch resume analysis
+- Interactive CLI mode and FastAPI endpoint
 
 ## Installation
 
-1. Clone or download this project
+1. Clone or download this project.
 2. Install required dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
+> Recommended: use the included virtual environment at `.venv` if available.
+
 ## Usage
 
-### Interactive Mode (Recommended)
+### Interactive CLI Mode
 
-Simply run the application:
+Run the main application:
 
 ```bash
 python app.py
@@ -38,98 +36,88 @@ python app.py
 
 Then:
 
-1. Paste the job description
-2. Provide the path to a resume file or folder containing resumes
-3. View the ATS analysis report
+1. Paste the job description.
+2. Enter a resume file path or a directory containing resumes.
+3. View the generated ATS analysis report.
 
 ### Command Line Mode
+
+Run the analyzer with a resume path and job description file:
 
 ```bash
 python app.py <resume_path> <job_description_file>
 ```
 
-Example:
+Examples:
 
 ```bash
 python app.py resumes/john_doe.pdf job_description.txt
-```
-
-Or for batch analysis:
-
-```bash
 python app.py resumes/ job_description.txt
 ```
 
-## Output Report
+### FastAPI Mode
 
-The analyzer provides:
+Start the API server:
 
-- **Overall Score**: 0-100 rating
+```bash
+python -m uvicorn api:app --reload --host 127.0.0.1 --port 8000
+```
+
+Then open the interactive docs at:
+
+- `http://127.0.0.1:8000/docs`
+
+## What the Report Includes
+
+- **Overall Score**: ATS compatibility rating from 0 to 100
 - **Component Scores**:
-  - Keyword Match: % of job description keywords found in resume
-  - Technical Skills: Match against technical requirements
-  - Soft Skills: Match against soft skill requirements
-  - Experience Relevance: Experience level alignment
-  - Format Quality: Resume structure assessment
-
-- **Missing Keywords**: Keywords from job description not in resume
-- **Recommendations**: Specific improvements to boost ATS score
-- **Contact Information**: Extracted email, phone, LinkedIn
-
-## Score Interpretation
-
-- **75-100**: Excellent match ✅
-- **50-74**: Good potential ⚠️
-- **Below 50**: Needs improvement ❌
-
-## How It Works
-
-1. **Parsing**: Extracts text from resume file
-2. **Scoring**: Compares resume content against job description
-3. **Analysis**: Identifies strengths and gaps
-4. **Recommendations**: Suggests improvements
-
-## File Structure
-
-```
-Resume_ATS_CHECKER/
-├── app.py           # Main application
-├── parser.py        # Resume file parsing
-├── scorer.py        # ATS scoring engine
-├── requirements.txt # Python dependencies
-├── README.md        # This file
-└── resumes/         # Folder for resume files
-```
+  - Keyword Match
+  - Technical Skills
+  - Soft Skills
+  - Experience Relevance
+  - Format Quality
+- **Missing Keywords**: Notable job description keywords absent from the resume
+- **Recommendations**: Suggested improvements
+- **Contact Information**: Extracted email, phone, and LinkedIn
 
 ## Supported Formats
 
-- PDF (.pdf)
-- DOCX (.docx)
-- TXT (.txt)
+- `.pdf`
+- `.docx`
+- `.txt`
 
-## Tips for Higher ATS Scores
+## Project Structure
 
-1. **Use Keywords**: Include keywords from the job description
-2. **Structured Format**: Use clear sections (Experience, Skills, Education)
-3. **Technical Skills**: Explicitly list relevant technologies and tools
-4. **Quantify Experience**: Mention years of experience
-5. **Contact Info**: Include email and phone number
-6. **Relevant Content**: Tailor content to the job description
+```
+Resume_ATS_CHECKER/
+├── api.py             # FastAPI API endpoints
+├── app.py             # Main CLI application
+├── parser.py          # Resume parsing and contact extraction
+├── scorer.py          # ATS scoring logic and report generation
+├── requirements.txt   # Python dependencies
+├── README.md          # Project documentation
+└── resumes/           # Resume files for batch analysis
+```
+
+## Notes
+
+- The `resumes/` folder is expected to contain the files you want to analyze.
+- If you run `python app.py resumes job_description.txt` and no results appear, verify that `resumes/` contains supported files.
 
 ## Troubleshooting
 
-**Q: PDF parsing not working?**
+- If PDF parsing fails, ensure `PyPDF2` is installed.
+- If DOCX parsing fails, ensure `python-docx` is installed.
+- If an unsupported file type is used, add one of the supported formats.
+- If a path is not found, verify the file or folder path is correct.
 
-- Ensure PyPDF2 is installed: `pip install PyPDF2`
-- Some PDFs may be scanned images; consider converting to text first
+## Tips for Better ATS Scores
 
-**Q: DOCX file not recognized?**
-
-- Install python-docx: `pip install python-docx`
-
-**Q: Module not found error?**
-
-- Reinstall dependencies: `pip install -r requirements.txt`
+- Use job description keywords exactly as written.
+- Include relevant technical skills and tools.
+- Highlight experience with years and project results.
+- Keep resume format structured and readable.
+- Add contact information clearly at the top.
 
 ## License
 
@@ -137,4 +125,4 @@ Free to use for personal and commercial purposes.
 
 ## Contributing
 
-Feel free to fork and improve this project!
+Contributions are welcome. Feel free to fork, improve the scoring logic, add support for new resume formats, or enhance the API.
