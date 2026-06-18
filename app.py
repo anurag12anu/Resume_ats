@@ -17,7 +17,7 @@ class ResumeATSAnalyzer:
         self.parser = ResumeParser()
         self.scorer = ATSScorer()
     
-    def analyze_resume(self, resume_path, job_description):
+    def analyze_resume(self, resume_path, job_description, ats_only=True):
         """Analyze a single resume against job description."""
         try:
             # Parse resume
@@ -27,13 +27,13 @@ class ResumeATSAnalyzer:
             contact_info = self.parser.extract_contact_info(resume_text)
             
             # Generate ATS report
-            report = self.scorer.generate_report(resume_text, job_description, contact_info)
+            report = self.scorer.generate_report(resume_text, job_description, contact_info, ats_only=ats_only)
             
             return report
         except Exception as e:
             return {'error': str(e)}
     
-    def analyze_batch(self, resumes_dir, job_description):
+    def analyze_batch(self, resumes_dir, job_description, ats_only=True):
         """Analyze multiple resumes in a directory."""
         resumes_path = Path(resumes_dir)
         results = []
@@ -42,7 +42,7 @@ class ResumeATSAnalyzer:
         
         for resume_file in resumes_path.glob('*'):
             if resume_file.suffix.lower() in supported_extensions:
-                report = self.analyze_resume(str(resume_file), job_description)
+                report = self.analyze_resume(str(resume_file), job_description, ats_only=ats_only)
                 results.append({
                     'filename': resume_file.name,
                     'report': report
@@ -50,10 +50,18 @@ class ResumeATSAnalyzer:
         
         return results
     
-    def print_report(self, filename, report):
+    def print_report(self, filename, report, ats_only=False):
         """Pretty print analysis report."""
         if 'error' in report:
             print(f"\n❌ Error analyzing {filename}: {report['error']}")
+            return
+        
+        scores = report['scores']
+        if ats_only:
+            if filename:
+                print(f"{filename}: {scores['ats_score']}")
+            else:
+                print(f"{scores['ats_score']}")
             return
         
         print(f"\n{'='*60}")
@@ -61,9 +69,8 @@ class ResumeATSAnalyzer:
         print(f"{'='*60}")
         
         # Print scores
-        scores = report['scores']
         print("\n📊 ATS Scores:")
-        print(f"  Overall Score: {scores['overall']}/100 {'🟢' if scores['overall'] >= 75 else '🟡' if scores['overall'] >= 50 else '🔴'}")
+        print(f"  ATS Score: {scores['ats_score']}/100 {'🟢' if scores['ats_score'] >= 75 else '🟡' if scores['ats_score'] >= 50 else '🔴'}")
         print(f"  Keyword Match: {scores['keyword_match']:.1f}%")
         print(f"  Technical Skills: {scores['technical_skills']:.1f}%")
         print(f"  Soft Skills: {scores['soft_skills']:.1f}%")
@@ -115,8 +122,8 @@ class ResumeATSAnalyzer:
         job_description = "\n".join(lines)
         
         if not job_description.strip():
-            print("Error: No job description provided")
-            return
+            print("No job description provided. Running generic resume analysis.")
+            job_description = ""
         
         # Get resume path
         resume_path = input("\nEnter resume file path (or folder for batch): ").strip()
@@ -144,9 +151,9 @@ class ResumeATSAnalyzer:
                 print(f"No resume files found in {resume_path}")
                 return
             
-            # Sort by score
+            # Sort by ATS score
             results.sort(
-                key=lambda x: x['report'].get('scores', {}).get('overall', 0),
+                key=lambda x: x['report'].get('scores', {}).get('ats_score', 0),
                 reverse=True
             )
             
@@ -164,25 +171,34 @@ def main():
     """Main entry point."""
     analyzer = ResumeATSAnalyzer()
     
-    if len(sys.argv) > 2:
+    args = sys.argv[1:]
+    # Default: only ATS score is produced internally and as CLI output.
+    # Use `--full` to request the full report instead.
+    full_requested = any(flag in args for flag in ('--full',))
+    ats_only = not full_requested
+    args = [arg for arg in args if arg not in ('--full',)]
+    
+    if args:
         # Command line mode
-        resume_path = sys.argv[1]
-        job_file = sys.argv[2]
+        resume_path = args[0]
+        job_description = ""
         
-        try:
-            with open(job_file, 'r') as f:
-                job_description = f.read()
-        except FileNotFoundError:
-            print(f"Error: Job description file not found: {job_file}")
-            return
+        if len(args) > 1:
+            job_file = args[1]
+            try:
+                with open(job_file, 'r') as f:
+                    job_description = f.read()
+            except FileNotFoundError:
+                print(f"Error: Job description file not found: {job_file}")
+                return
         
         if Path(resume_path).is_file():
-            report = analyzer.analyze_resume(resume_path, job_description)
-            analyzer.print_report(Path(resume_path).name, report)
+            report = analyzer.analyze_resume(resume_path, job_description, ats_only=ats_only)
+            analyzer.print_report(Path(resume_path).name, report, ats_only=ats_only)
         elif Path(resume_path).is_dir():
-            results = analyzer.analyze_batch(resume_path, job_description)
+            results = analyzer.analyze_batch(resume_path, job_description, ats_only=ats_only)
             for result in results:
-                analyzer.print_report(result['filename'], result['report'])
+                analyzer.print_report(result['filename'], result['report'], ats_only=ats_only)
     else:
         # Interactive mode
         analyzer.interactive_mode()
